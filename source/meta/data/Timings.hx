@@ -16,11 +16,11 @@ class Timings
 	// from left to right
 	// max milliseconds, score from it and percentage
 	public static var judgementsMap:Map<String, Array<Dynamic>> = [
-		"sick" => [0, 45, 350, 100, 'SFC'],
-		"good" => [1, 90, 150, 75, 'GFC'],
-		"bad" => [2, 135, 0, 25, 'FC'],
-		"shit" => [3, 157.5, -50, -150],
-		"miss" => [4, 180, -100, -175],
+		"sick" => [0, 45, 825, 100, 'SFC'],
+		"good" => [1, 90, 650, 75, 'GFC'],
+		"bad" => [2, 135, 300, 25, 'FC'],
+		"shit" => [3, 157.5, 275, -150],
+		"miss" => [4, 180, 50, -175],
 	];
 
 	public static var msThreshold:Float = 0;
@@ -30,11 +30,11 @@ class Timings
 		"S+" => 100,
 		"S" => 95,
 		"A" => 90,
-		"b" => 85,
-		"c" => 80,
-		"d" => 75,
-		"e" => 70,
-		"f" => 65,
+		"B" => 85,
+		"C" => 80,
+		"D" => 75,
+		"E" => 70,
+		"F" => 65,
 	];
 
 	public static var ratingFinal:String = "N/A";
@@ -97,7 +97,7 @@ class Timings
 		else
 		{
 			if (PlayState.current.misses < 10)
-				comboDisplay = 'SDCB';
+				comboDisplay = '';
 		}
 
 		// this updates the most so uh

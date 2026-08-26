@@ -142,6 +142,7 @@ class Init extends FlxState
 		],
 		"Note Skin" => ['default', Selector, 'Choose a note skin.', NOT_FORCED, ''],
 		"Framerate Cap" => [120, Selector, 'Define your maximum FPS.', NOT_FORCED, ['']],
+		"Scroll Speed" => [0, Selector, 'Define your Scroll Speed (0 = Song Scroll Speed)', NOT_FORCED, ['']],
 		"Opaque Arrows" => [
 			false,
 			Checkmark,

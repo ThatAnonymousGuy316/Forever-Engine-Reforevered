@@ -14,6 +14,7 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 class FNFSprite extends FlxSprite
 {
 	public var animOffsets:Map<String, Array<Dynamic>>;
+	public var idleAnim:String;
 
 	public function new(x:Float = 0, y:Float = 0)
 	{
@@ -67,12 +68,14 @@ class FNFSprite extends FlxSprite
 		return this;
 	}
 
+	public function dance(?forced:Bool = false):Void
+	{
+		if (idleAnim != null)
+			animation.play(idleAnim);
+	}
+
 	override public function destroy()
 	{
-		// dump cache stuffs
-		if (graphic != null)
-			graphic.dump();
-
 		super.destroy();
 	}
 }

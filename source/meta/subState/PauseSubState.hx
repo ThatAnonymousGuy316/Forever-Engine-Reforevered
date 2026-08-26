@@ -115,6 +115,11 @@ class PauseSubState extends MusicBeatSubState
 			changeSelection(1);
 		}
 
+		if (FlxG.keys.justPressed.ESCAPE)
+		{
+			close();
+		}
+
 		if (accepted)
 		{
 			var daSelected:String = menuItems[curSelected];

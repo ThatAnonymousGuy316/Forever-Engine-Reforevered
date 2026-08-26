@@ -21,9 +21,7 @@ using StringTools;
 class StoryMenuState extends MusicBeatState
 {
 	var scoreText:FlxText;
-	var curDifficulty:Int = 1;
-
-	public static var weekUnlocked:Array<Bool> = [true, true, true, true, true, true, true];
+	public static var curDifficulty:Int = 1;
 
 	var weekCharacters:Array<Dynamic> = [
 		['', 'bf', 'gf'],
@@ -32,19 +30,19 @@ class StoryMenuState extends MusicBeatState
 		['pico', 'bf', 'gf'],
 		['mom', 'bf', 'gf'],
 		['parents-christmas', 'bf', 'gf'],
-		['senpai', 'bf', 'gf']
+		['senpai', 'bf', 'gf'],
+		['tankman', 'bf', 'gf'],
+		['', 'bf', 'gf']
 	];
 
 	var txtWeekTitle:FlxText;
 
-	var curWeek:Int = 0;
+	public var curWeek:Int = 0;
 
 	var txtTracklist:FlxText;
 
 	var grpWeekText:FlxTypedGroup<MenuItem>;
 	var grpWeekCharacters:FlxTypedGroup<MenuCharacter>;
-
-	var grpLocks:FlxTypedGroup<FlxSprite>;
 
 	var difficultySelectors:FlxGroup;
 	var sprDifficulty:FlxSprite;
@@ -91,9 +89,6 @@ class StoryMenuState extends MusicBeatState
 
 		grpWeekCharacters = new FlxTypedGroup<MenuCharacter>();
 
-		grpLocks = new FlxTypedGroup<FlxSprite>();
-		add(grpLocks);
-
 		for (i in 0...Main.gameWeeks.length)
 		{
 			var weekThing:MenuItem = new MenuItem(0, yellowBG.y + yellowBG.height + 10, i);
@@ -104,18 +99,6 @@ class StoryMenuState extends MusicBeatState
 			weekThing.screenCenter(X);
 			weekThing.antialiasing = true;
 			// weekThing.updateHitbox();
-
-			// Needs an offset thingie
-			if (!weekUnlocked[i])
-			{
-				var lock:FlxSprite = new FlxSprite(weekThing.width + 10 + weekThing.x);
-				lock.frames = ui_tex;
-				lock.animation.addByPrefix('lock', 'lock');
-				lock.animation.play('lock');
-				lock.ID = i;
-				lock.antialiasing = true;
-				grpLocks.add(lock);
-			}
 		}
 
 		trace("Line 96");
@@ -206,13 +189,6 @@ class StoryMenuState extends MusicBeatState
 
 		// FlxG.watch.addQuick('font', scoreText.font);
 
-		difficultySelectors.visible = weekUnlocked[curWeek];
-
-		grpLocks.forEach(function(lock:FlxSprite)
-		{
-			lock.y = grpWeekText.members[lock.ID].y;
-		});
-
 		if (!movedBack)
 		{
 			if (!selectedWeek)
@@ -258,7 +234,6 @@ class StoryMenuState extends MusicBeatState
 
 	function selectWeek()
 	{
-		if (weekUnlocked[curWeek])
 		{
 			if (stopspamming == false)
 			{
@@ -337,10 +312,7 @@ class StoryMenuState extends MusicBeatState
 		for (item in grpWeekText.members)
 		{
 			item.targetY = bullShit - curWeek;
-			if (item.targetY == Std.int(0) && weekUnlocked[curWeek])
-				item.alpha = 1;
-			else
-				item.alpha = 0.6;
+			item.alpha = 1;
 			bullShit++;
 		}
 
@@ -351,9 +323,14 @@ class StoryMenuState extends MusicBeatState
 
 	function updateText()
 	{
-		grpWeekCharacters.members[0].createCharacter(weekCharacters[curWeek][0], true);
-		// grpWeekCharacters.members[1].createCharacter(weekCharacters[curWeek][1]);
-		// grpWeekCharacters.members[2].createCharacter(weekCharacters[curWeek][2]);
+		if (weekCharacters[curWeek][0] != null && weekCharacters[curWeek][0] != '')
+		{
+			grpWeekCharacters.members[0].createCharacter(weekCharacters[curWeek][0], true);
+			grpWeekCharacters.members[0].visible = true;
+		}
+		else
+			grpWeekCharacters.members[0].visible = false;
+		
 		txtTracklist.text = "Tracks\n";
 
 		var stringThing:Array<String> = Main.gameWeeks[curWeek][0];

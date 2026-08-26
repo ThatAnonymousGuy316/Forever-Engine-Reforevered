@@ -33,8 +33,8 @@ class FreeplayState extends MusicBeatState
 	var songs:Array<SongMetadata> = [];
 
 	var selector:FlxText;
-	var curSelected:Int = 0;
-	var curDifficulty:Int = 1;
+	public static var curSelected:Int = 0;
+	public static var curDifficulty:Int = 1;
 
 	var scoreText:FlxText;
 	var diffText:FlxText;
@@ -226,6 +226,7 @@ class FreeplayState extends MusicBeatState
 		if (controls.BACK)
 		{
 			threadActive = false;
+			FlxG.sound.music.stop();
 			Main.switchState(new MainMenuState());
 		}
 

@@ -21,6 +21,8 @@ import meta.data.Conductor;
 import meta.data.Timings;
 import meta.state.PlayState;
 
+import flixel.util.FlxStringUtil;
+
 using StringTools;
 
 class ClassHUD extends FlxTypedGroup<FlxBasic>
@@ -51,7 +53,7 @@ class ClassHUD extends FlxTypedGroup<FlxBasic>
 
 	var infoDisplay:String = CoolUtil.dashToSpace(PlayState.SONG.song);
 	var diffDisplay:String = CoolUtil.difficultyFromNumber(PlayState.storyDifficulty);
-	var engineDisplay:String = "FOREVER ENGINE v" + Main.gameVersion;
+	var engineDisplay:String = "FOREVER ENGINE REFOREVERD v" + Main.gameVersion;
 
 	// eep
 	public function new()
@@ -88,12 +90,9 @@ class ClassHUD extends FlxTypedGroup<FlxBasic>
 		add(iconP2);
 	}
 
-	var counterTextSize:Int = 20;
-	var counterLeft = (Init.trueSettings.get('Counter') == 'Left');
-
 	public function createHUDText() {
 		scoreBar = new FlxText(FlxG.width * 0.5, Math.floor(healthBarBG.y + 40), 0, scoreDisplay);
-		scoreBar.setFormat(Paths.font('vcr.ttf'), 16, FlxColor.WHITE);
+		scoreBar.setFormat(Paths.font('vcr.ttf'), 24, FlxColor.WHITE);
 		scoreBar.setBorderStyle(OUTLINE, FlxColor.BLACK, 1.5);
 		scoreBar.antialiasing = true;
 		add(scoreBar);
@@ -111,30 +110,6 @@ class ClassHUD extends FlxTypedGroup<FlxBasic>
 		centerMark.screenCenter(X);
 		centerMark.antialiasing = true;
 		add(centerMark);
-
-		// counter
-		if (Init.trueSettings.get('Counter') != 'None')
-		{
-			var judgementNameArray:Array<String> = [];
-			for (i in Timings.judgementsMap.keys())
-				judgementNameArray.insert(Timings.judgementsMap.get(i)[0], i);
-			judgementNameArray.sort(sortByShit);
-			for (i in 0...judgementNameArray.length)
-			{
-				var textAsset:FlxText = new FlxText(5
-					+ (!counterLeft ? (FlxG.width - 10) : 0),
-					(FlxG.height * 0.5)
-					- (counterTextSize * (judgementNameArray.length * 0.5))
-					+ (i * counterTextSize), 0, '', counterTextSize);
-				if (!counterLeft)
-					textAsset.x -= textAsset.text.length * counterTextSize;
-
-				textAsset.setFormat(Paths.font("vcr.ttf"), counterTextSize, FlxColor.WHITE, counterLeft ? LEFT : RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-				textAsset.borderSize = 1.5;
-				timingsMap.set(judgementNameArray[i], textAsset);
-				add(textAsset);
-			}
-		}
 
 		autoplayMark = new FlxText(-5, (Init.trueSettings.get('Downscroll') ? centerMark.y - 60 : centerMark.y + 60), FlxG.width - 800, '[AUTOPLAY]\n', 32);
 		autoplayMark.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
@@ -188,29 +163,23 @@ class ClassHUD extends FlxTypedGroup<FlxBasic>
 
 	private final divider:String = " • ";
 
+	public function format(a:Dynamic)
+	{
+		return FlxStringUtil.formatMoney(a, false, true);
+	}
+
 	public function updateScoreText()
 	{
-		scoreDisplay = 'Score: ${game.songScore}';
+		scoreDisplay = 'Score: ${format(game.songScore)}';
 		if (Init.trueSettings.get('Display Accuracy'))
 		{
-			var comboDisplay:String = (Timings.comboDisplay != '' ? ' [${Timings.comboDisplay}] ' : '');
-			scoreDisplay += divider + 'Accuracy: ${Math.floor(Timings.getAccuracy() * 100) / 100}%' + comboDisplay;
-			scoreDisplay += divider + 'Combo Breaks: ${game.misses}';
-			scoreDisplay += divider + 'Rank: ${Timings.returnScoreRating().toUpperCase()}';
+			var comboDisplay:String = (Timings.comboDisplay != '' ? ' [${Timings.comboDisplay}]' : '');
+			scoreDisplay += divider + 'Misses: ${format(game.misses)}' + comboDisplay;
+			scoreDisplay += divider + 'Rating: ${Timings.returnScoreRating().toUpperCase()} (${Math.round(Math.floor(Timings.getAccuracy() * 100) / 100)}%)';
 		}
 
 		scoreBar.text = '$scoreDisplay\n';
 		scoreBar.screenCenter(X);
-
-		// update counter
-		if (Init.trueSettings.get('Counter') != 'None')
-		{
-			for (i in timingsMap.keys())
-			{
-				timingsMap[i].text = '${(i.charAt(0).toUpperCase() + i.substring(1, i.length))}: ${Timings.gottenJudgements.get(i)}';
-				timingsMap[i].x = (5 + (!counterLeft ? (FlxG.width - 10) : 0) - (!counterLeft ? (6 * counterTextSize) : 0));
-			}
-		}
 
 		// update game
 		PlayState.detailsSub = scoreBar.text;

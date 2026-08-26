@@ -36,7 +36,7 @@ class Main extends Sprite
 	public static var initialState:Class<FlxState> = meta.state.TitleState; // Determine the state the game should begin at
 	public static var framerate:Int = #if (html5 || neko) 60 #else 120 #end; // How many frames per second the game should run at.
 
-	public static final gameVersion:String = '0.3.2h';
+	public static final gameVersion:String = '0.1.1';
 
 	// var zoom:Float = -1; // If -1, zoom is automatically calculated to fit the window dimensions.
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
@@ -56,43 +56,64 @@ class Main extends Sprite
 			['Tutorial'],
 			['gf'],
 			[FlxColor.fromRGB(129, 100, 223)],
-			'Funky Beginnings'
+			'Funky Beginnings',
+			'tutorial'
 		],
 		[ // Week 1
 			['Bopeebo', 'Fresh', 'Dadbattle'],
 			['dad', 'dad', 'dad'],
 			[FlxColor.fromRGB(129, 100, 223)],
-			'vs. DADDY DEAREST'
+			'vs. DADDY DEAREST',
+			'week1'
 		],
 		[ // Week 2
 			['Spookeez', 'South', 'Monster'],
 			['spooky', 'spooky', 'monster'],
 			[FlxColor.fromRGB(30, 45, 60)],
-			'Spooky Month'
+			'Spooky Month',
+			'week2'
 		],
 		[ // Week 3
 			['Pico', 'Philly-Nice', 'Blammed'],
 			['pico'],
 			[FlxColor.fromRGB(111, 19, 60)],
-			'vs. Pico'
+			'vs. Pico',
+			'week3'
 		],
 		[ // Week 4
 			['Satin-Panties', 'High', 'Milf'],
 			['mom'],
 			[FlxColor.fromRGB(203, 113, 170)],
-			'MOMMY MUST MURDER'
+			'MOMMY MUST MURDER',
+			'week4'
 		],
 		[ // Week 5
 			['Cocoa', 'Eggnog', 'Winter-Horrorland'],
 			['parents-christmas', 'parents-christmas', 'monster-christmas'],
 			[FlxColor.fromRGB(141, 165, 206)],
-			'RED SNOW'
+			'RED SNOW',
+			'week5'
 		],
 		[ // Week 6
 			['Senpai', 'Roses', 'Thorns'],
 			['senpai', 'senpai', 'spirit'],
 			[FlxColor.fromRGB(206, 106, 169)],
-			"hating simulator ft. moawling"
+			"hating simulator ft. moawling",
+			'week6'
+		],
+		[ // Week 7
+			['Ugh', 'Guns', 'Stress'],
+			['tankman', 'tankman', 'tankman'],
+			[FlxColor.fromRGB(255, 255, 255)],
+			"Tankman",
+			'week7'
+		],
+		[ // Score
+			['Score'],
+			['darnboy'],
+			[FlxColor.fromRGB(114, 94, 176)],
+			"Score (FANMADE WEEK 8 LEAK)",
+			'weekend0'
 		],
 	];
 

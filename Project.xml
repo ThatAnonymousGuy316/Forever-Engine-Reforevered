@@ -3,7 +3,7 @@
 
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Forever Engine" file="Forever-Engine" packageName="com.crowplexus.foreverenginelegacy" package="com.crowplexus.foreverenginelegacy" main="Main" company="crowplexus" />
+	<app title="Forever Engine: Reforevered" file="Reforevered" packageName="com.crowplexus.foreverenginelegacy" package="com.crowplexus.foreverenginelegacy" main="Main" company="crowplexus" />
 
 	<!--The flixel preloader is not accurate in Chrome. You can use it regularly if you embed the swf into a html file
 		or you can set the actual size of your file manually at "FlxPreloaderBase-onUpdate-bytesTotal"-->
@@ -34,6 +34,7 @@
 
 	<source path="source" />
 	<assets path="assets" />
+	<assets path="mod" />
 
 	<assets path="FE-CrashDialog.exe" type="template" if="windows release" />
 
@@ -46,6 +47,13 @@
 	<haxelib name="flixel-ui" />
 	<haxelib name="discord_rpc" if="cpp" />
 	<haxelib name="hxcpp-debug-server" if="debug" />
+	<haxelib name="hscript-iris"/>
+	<haxedef name="hscriptPos"/>
+	<haxelib name="haxeui-core"/>
+	<haxelib name="haxeui-flixel"/>
+	<section if="cpp">
+		<haxelib name="hxvlc" if="desktop || mobile" />
+	</section>
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 

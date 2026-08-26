@@ -7,6 +7,9 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxSpriteGroup;
 import meta.data.dependency.FNFSprite;
 import meta.data.font.Alphabet;
+import flixel.math.FlxMath;
+import flixel.text.FlxText;
+import flixel.util.FlxColor;
 
 class Selector extends FlxTypedSpriteGroup<FlxSprite>
 {
@@ -14,7 +17,7 @@ class Selector extends FlxTypedSpriteGroup<FlxSprite>
 	var leftSelector:FNFSprite;
 	var rightSelector:FNFSprite;
 
-	public var optionChosen:Alphabet;
+	public var optionChosen:FlxText;
 	public var chosenOptionString:String = '';
 
 	public var optionName:String = "";
@@ -56,7 +59,8 @@ class Selector extends FlxTypedSpriteGroup<FlxSprite>
 		//trace(isNumber);
 
 		var inc:Int = isNumber ? 200 : 0;
-		optionChosen = new Alphabet(FlxG.width * 0.5 + inc, shiftY + 20, chosenOptionString, !isNumber, false);
+		optionChosen = new FlxText(FlxG.width * 0.55 + inc, shiftY, 0, chosenOptionString, 30);
+		optionChosen.setFormat(Paths.font("Funkin-Bold.otf"), 78, FlxColor.BLACK, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(optionChosen);
 	}
 
@@ -101,18 +105,19 @@ class Selector extends FlxTypedSpriteGroup<FlxSprite>
 		return super.add(object);
 	}
 
-	public function updateSelection(newSelection:Int, min:Int = 0, max:Int = 100, inc:Int = 5):Void
+	public function updateSelection(newSelection:Float, min:Float = 0, max:Float = 100, inc:Float = 5):Void
 	{
 		// bro I dont even know if the engine works in html5 why am I even doing this
 		// lazily hardcoded selector settings
-		var ogValue = Init.trueSettings.get(optionName);
+		var ogValue:Float = Init.trueSettings.get(optionName);
 		var increase = inc * newSelection;
 
 		if (newSelection != 0)
 			selectorPlay(newSelection == -1 ? 'left' : 'right', 'press');
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 
-		ogValue = flixel.math.FlxMath.bound(ogValue + increase, min, max);
+		ogValue = FlxMath.bound(ogValue + increase, min, max);
+		ogValue = Math.round(ogValue * 100) / 100;
 		chosenOptionString = Std.string(ogValue);
 		optionChosen.text = Std.string(ogValue);
 

@@ -27,6 +27,7 @@ import gameObjects.userInterface.*;
 import gameObjects.userInterface.notes.*;
 import gameObjects.userInterface.notes.Strumline.UIStaticArrow;
 import meta.*;
+import meta.data.dependency.FNFSprite;
 import meta.MusicBeat.MusicBeatState;
 import meta.data.*;
 import meta.data.Song.SwagSong;
@@ -48,6 +49,10 @@ import meta.data.dependency.Discord;
 
 class PlayState extends MusicBeatState
 {
+	public var scriptArray:Array<ForeverHScript> = [];
+
+	public var modchartSprites:Map<String, FNFSprite> = new Map();
+
 	public static var current:PlayState;
 
 	public static var curStage:String = '';
@@ -56,6 +61,8 @@ class PlayState extends MusicBeatState
 	public static var storyWeek:Int = 0;
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 2;
+
+	public static var daScrollSpeed:Float = 1;
 
 	public static var songMusic:FlxSound;
 	public static var vocals:FlxSound;
@@ -202,6 +209,11 @@ class PlayState extends MusicBeatState
 		popUpCombo(true);
 		//
 
+		for (ext in ForeverHScript.globalExtensions())
+		{
+			initScript(ext);
+		}
+
 		stageBuild = new Stage(curStage);
 		add(stageBuild);
 
@@ -210,6 +222,30 @@ class PlayState extends MusicBeatState
 		gf.adjustPos = false;
 		gf.setCharacter(300, 100, stageBuild.returnGFtype(curStage));
 		gf.scrollFactor.set(0.95, 0.95);
+
+		switch (gf.curCharacter)
+		{
+			case 'pico-speaker':
+				gf.x -= 50;
+				gf.y -= 200;
+
+				var tempTankman:TankmenBG = new TankmenBG(20, 500, true);
+				tempTankman.strumTime = 10;
+				tempTankman.resetShit(20, 600, true);
+				stageBuild.tankmanRun.add(tempTankman);
+
+				for (i in 0...TankmenBG.animationNotes.length)
+				{
+					if (FlxG.random.bool(16))
+					{
+						var tankman:TankmenBG = stageBuild.tankmanRun.recycle(TankmenBG);
+						// new TankmenBG(500, 200 + FlxG.random.int(50, 100), TankmenBG.animationNotes[i][1] < 2);
+						tankman.strumTime = TankmenBG.animationNotes[i][0];
+						tankman.resetShit(500, 200 + FlxG.random.int(50, 100), TankmenBG.animationNotes[i][1] < 2);
+						stageBuild.tankmanRun.add(tankman);
+					}
+				}
+		}
 
 		opponent = new Character().setCharacter(50, 850, SONG.player2);
 		boyfriend = new Boyfriend();
@@ -240,6 +276,11 @@ class PlayState extends MusicBeatState
 
 		add(stageBuild.foreground);
 
+		for (script in scriptArray)
+		{
+			script.call(['onCreatePost', 'createPost'], [boyfriend, gf, opponent]);
+		}
+
 		// force them to dance
 		charactersDance(curBeat);
 
@@ -251,6 +292,13 @@ class PlayState extends MusicBeatState
 
 		// generate the song
 		generateSong(SONG.song);
+
+		for (ext in ForeverHScript.globalExtensions())
+		{
+			var deScript:ForeverHScript = new ForeverHScript(ForeverHScript.scriptsFolder() + "/songs/" + SONG.song.toLowerCase() + "." + ext);
+			deScript.call(['onCreate', 'create'], []);
+			scriptArray.push(deScript);
+		}
 
 		// set the camera position to the center of the stage
 		camPos.set(gf.x + (gf.frameWidth * 0.5), gf.y + (gf.frameHeight * 0.5));
@@ -297,6 +345,11 @@ class PlayState extends MusicBeatState
 		uiHUD = new ClassHUD();
 		uiHUD.camera = camHUD;
 		add(uiHUD);
+
+		for (script in scriptArray)
+		{
+			script.call(['onCreatePostUI', 'createPostUI'], [boyfriend, gf, opponent]);
+		}
 
 		//
 		keysArray = [
@@ -472,6 +525,12 @@ class PlayState extends MusicBeatState
 			FlxG.stage.removeEventListener(KeyboardEvent.KEY_UP, onKeyRelease);
 		}
 
+		for (script in scriptArray)
+		{
+			script.onDestroy();
+		}
+		scriptArray = [];
+
 		super.destroy();
 	}
 
@@ -480,6 +539,11 @@ class PlayState extends MusicBeatState
 	override public function update(elapsed:Float)
 	{
 		stageBuild.stageUpdateConstant(elapsed, boyfriend, gf, opponent);
+
+		for (script in scriptArray)
+		{
+			script.call(['onUpdate', 'update'], [elapsed, boyfriend, gf, opponent]);
+		}
 
 		super.update(elapsed);
 
@@ -509,7 +573,7 @@ class PlayState extends MusicBeatState
 		if (!inCutscene)
 		{
 			// pause the game if the game is allowed to pause and enter is pressed
-			if (FlxG.keys.justPressed.ENTER && startedCountdown && canPause)
+			if ((FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.ESCAPE) && startedCountdown && canPause)
 			{
 				pauseGame();
 			}
@@ -530,7 +594,6 @@ class PlayState extends MusicBeatState
 				if ((FlxG.keys.justPressed.SIX))
 				{
 					plrStrums.autoplay = !plrStrums.autoplay;
-					uiHUD.autoplayMark.visible = plrStrums.autoplay;
 					PlayState.SONG.validScore = false;
 				}
 			}
@@ -586,9 +649,6 @@ class PlayState extends MusicBeatState
 
 					camFollow.setPosition(getCenterX + camDisplaceX + char.characterData.camOffsetX,
 						getCenterY + camDisplaceY + char.characterData.camOffsetY);
-
-					if (char.curCharacter == 'mom')
-						vocals.volume = 1;
 				}
 				else
 				{
@@ -668,6 +728,11 @@ class PlayState extends MusicBeatState
 			if (Init.trueSettings.get('Controller Mode'))
 				controllerInput();
 		}
+
+		for (script in scriptArray)
+		{
+			script.call(['onUpdatePost', 'updatePost'], [elapsed, boyfriend, gf, opponent]);
+		}
 	}
 
 	// maybe theres a better place to put this, idk -saw
@@ -728,7 +793,12 @@ class PlayState extends MusicBeatState
 
 				strumline.allNotes.forEachAlive(function(daNote:Note)
 				{
-					var roundedSpeed = FlxMath.roundDecimal(daNote.noteSpeed, 2);
+					if (Init.trueSettings.get('Scroll Speed') <= 0)
+						daScrollSpeed = daNote.noteSpeed;
+					else
+						daScrollSpeed = Init.trueSettings.get('Scroll Speed');
+					//daScrollSpeed = 4.25;
+					var roundedSpeed = FlxMath.roundDecimal(daScrollSpeed, 2);
 					var receptorPosY:Float = strumline.receptors.members[Math.floor(daNote.noteData)].y + Note.swagWidth / 6;
 					var psuedoY:Float = (downscrollMultiplier * -((Conductor.songPosition - daNote.strumTime) * (0.45 * roundedSpeed)));
 					var psuedoX = 25 + daNote.noteVisualOffset;
@@ -819,7 +889,6 @@ class PlayState extends MusicBeatState
 								for (note in daNote.childrenNotes)
 									note.tooLate = true;
 
-								vocals.volume = 0;
 								missNoteCheck((Init.trueSettings.get('Ghost Tapping')) ? true : false, daNote.noteData, boyfriend, true);
 								// ambiguous name
 								Timings.updateAccuracy(0);
@@ -893,7 +962,6 @@ class PlayState extends MusicBeatState
 		if (!coolNote.wasGoodHit)
 		{
 			coolNote.wasGoodHit = true;
-			vocals.volume = 1;
 
 			characterPlayAnimation(coolNote, character);
 			if (characterStrums.receptors.members[coolNote.noteData] != null)
@@ -1440,12 +1508,26 @@ class PlayState extends MusicBeatState
 		if (songMusic.time >= Conductor.songPosition + 20 || songMusic.time <= Conductor.songPosition - 20)
 			resyncVocals();
 		//*/
+
+		for (script in scriptArray)
+		{
+			script.set(['curStep'], curStep);
+			script.call(['onStepHit', 'stepHit'], [boyfriend, gf, opponent]);
+		}
 	}
 
 	private function charactersDance(curBeat:Int)
 	{
-		if ((curBeat % gfSpeed == 0) && ((gf.animation.curAnim.name.startsWith("idle") || gf.animation.curAnim.name.startsWith("dance"))))
-			gf.dance();
+		if (gf.curCharacter != 'pico-speaker')
+		{
+			if ((curBeat % gfSpeed == 0) && ((gf.animation.curAnim.name.startsWith("idle") || gf.animation.curAnim.name.startsWith("dance"))))
+				gf.dance();
+		}
+		else
+		{
+			if ((curBeat % gfSpeed == 0))
+				gf.playAnim('shoot' + FlxG.random.int(1, 4), true);
+		}
 
 		if ((boyfriend.animation.curAnim.name.startsWith("idle") || boyfriend.animation.curAnim.name.startsWith("dance"))
 			&& (curBeat % 2 == 0 || boyfriend.characterData.quickDancer))
@@ -1482,7 +1564,6 @@ class PlayState extends MusicBeatState
 			switch (curBeat)
 			{
 				case 128, 129, 130:
-					vocals.volume = 0;
 			}
 		}
 
@@ -1505,6 +1586,12 @@ class PlayState extends MusicBeatState
 		{
 			camGame.zoom += 0.015;
 			camHUD.zoom += 0.03;
+		}
+
+		for (script in scriptArray)
+		{
+			script.set(['curBeat'], curBeat);
+			script.call(['onBeatHit', 'beatHit'], [boyfriend, gf, opponent]);
 		}
 	}
 
@@ -1581,7 +1668,6 @@ class PlayState extends MusicBeatState
 	{
 		canPause = false;
 		songMusic.volume = 0;
-		vocals.volume = 0;
 		if (SONG.validScore)
 			Highscore.saveScore(SONG.song, songScore, storyDifficulty);
 
@@ -1894,5 +1980,23 @@ class PlayState extends MusicBeatState
 		if (Init.trueSettings.get('Disable Antialiasing') && Std.isOfType(Object, FlxSprite))
 			cast(Object, FlxSprite).antialiasing = false;
 		return super.add(Object);
+	}
+
+	public function initScript(ext:String)
+	{
+		var folder = Paths.getPreloadPath('${ForeverHScript.scriptsFolder()}/gameplay');
+
+		for (file in sys.FileSystem.readDirectory(folder))
+		{
+			if (StringTools.endsWith(file, '.' + ext))
+			{
+				var filePath = folder + '/' + file;
+
+				var deScript:ForeverHScript = new ForeverHScript(filePath);
+				deScript.call(['onCreate', 'create'], []);
+
+				scriptArray.push(deScript);
+			}
+		}
 	}
 }

@@ -151,7 +151,7 @@ class Alphabet extends FlxSpriteGroup
 				var letter:AlphaCharacter = new AlphaCharacter(xPos, 0, textSize);
 
 				if (isBold)
-					letter.createBold(character);
+					letter.createBoldLetter(character);
 				else
 				{
 					if (isNumber)
@@ -239,7 +239,7 @@ class Alphabet extends FlxSpriteGroup
 				letter.row = curRow;
 				if (isBold)
 				{
-					letter.createBold(splitWords[loopNum]);
+					letter.createBoldLetter(splitWords[loopNum]);
 				}
 				else
 				{
@@ -317,7 +317,7 @@ class Alphabet extends FlxSpriteGroup
 	}
 }
 
-class AlphaCharacter extends FlxSprite
+class AlphaCharacter extends meta.data.dependency.FNFSprite
 {
 	public static var alphabet:String = "abcdefghijklmnopqrstuvwxyz";
 
@@ -339,15 +339,60 @@ class AlphaCharacter extends FlxSprite
 		antialiasing = true;
 	}
 
-	public function createBold(letter:String)
+	public function createBoldLetter(letter:String)
 	{
-		if (AlphaCharacter.alphabet.indexOf(letter.toLowerCase()) != -1)
+		animation.addByPrefix(letter, letter.toUpperCase() + " bold", 24);
+		animation.play(letter);
+		updateHitbox();
+	}
+
+	public function createBoldNumber(letter:String):Void
+	{
+		animation.addByPrefix(letter, "bold" + letter, 24);
+		animation.play(letter);
+		updateHitbox();
+	}
+
+	public function createBoldSymbol(letter:String)
+	{
+		switch (letter)
 		{
-			// or just load regular text
-			animation.addByPrefix(letter, letter.toUpperCase() + " bold", 24);
-			animation.play(letter);
-			scale.set(textSize, textSize);
-			updateHitbox();
+			case '.':
+				animation.addByPrefix(letter, 'PERIOD bold', 24);
+			case "'":
+				animation.addByPrefix(letter, 'APOSTRAPHIE bold', 24);
+			case "?":
+				animation.addByPrefix(letter, 'QUESTION MARK bold', 24);
+			case "!":
+				animation.addByPrefix(letter, 'EXCLAMATION POINT bold', 24);
+			case "(":
+				animation.addByPrefix(letter, 'bold (', 24);
+			case ")":
+				animation.addByPrefix(letter, 'bold )', 24);
+			default:
+				animation.addByPrefix(letter, 'bold ' + letter, 24);
+		}
+		animation.play(letter);
+		updateHitbox();
+		switch (letter)
+		{
+			case "'":
+				y -= 20 * textSize;
+			case '-':
+				//x -= 35 - (90 * (1.0 - textSize));
+				y += 20 * textSize;
+			case '(':
+				x -= 65 * textSize;
+				y -= 5 * textSize;
+				offset.x = -58 * textSize;
+			case ')':
+				x -= 20 / textSize;
+				y -= 5 * textSize;
+				offset.x = 12 * textSize;
+			case '.':
+				y += 45 * textSize;
+				x += 5 * textSize;
+				offset.x += 3 * textSize;
 		}
 	}
 
@@ -361,13 +406,10 @@ class AlphaCharacter extends FlxSprite
 
 		animation.addByPrefix(letter, letter + " " + letterCase, 24);
 		animation.play(letter);
-		scale.set(textSize, textSize);
 		updateHitbox();
 
-		FlxG.log.add('the row' + row);
-
 		y = (110 - height);
-		y += row * 50;
+		y += row * 60;
 	}
 
 	public function createNumber(letter:String):Void
@@ -376,42 +418,44 @@ class AlphaCharacter extends FlxSprite
 		animation.play(letter);
 
 		updateHitbox();
+
+		y = (110 - height);
+		y += row * 60;
 	}
 
 	public function createSymbol(letter:String)
 	{
 		switch (letter)
 		{
+			case '#':
+				animation.addByPrefix(letter, 'hashtag', 24);
 			case '.':
 				animation.addByPrefix(letter, 'period', 24);
-				animation.play(letter);
-				setGraphicSize(8, 8);
-				y += 48;
 			case "'":
 				animation.addByPrefix(letter, 'apostraphie', 24);
-				animation.play(letter);
-				setGraphicSize(10, 10);
-				y += 20;
+				y -= 50;
 			case "?":
 				animation.addByPrefix(letter, 'question mark', 24);
-				animation.play(letter);
-				setGraphicSize(20, 40);
-				y += 16;
 			case "!":
 				animation.addByPrefix(letter, 'exclamation point', 24);
-				animation.play(letter);
-				setGraphicSize(10, 40);
-				y += 16;
 			case ",":
 				animation.addByPrefix(letter, 'comma', 24);
-				animation.play(letter);
-				setGraphicSize(10, 10);
-				y += 48;
 			default:
 				animation.addByPrefix(letter, letter, 24);
-				animation.play(letter);
 		}
+		animation.play(letter);
 
 		updateHitbox();
+
+		y = (110 - height);
+		y += row * 60;
+		switch (letter)
+		{
+			case "'":
+				y -= 20;
+			case '-':
+				//x -= 35 - (90 * (1.0 - textSize));
+				y -= 16;
+		}
 	}
 }

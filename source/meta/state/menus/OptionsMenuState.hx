@@ -66,6 +66,7 @@ class OptionsMenuState extends MusicBeatState
 					['Downscroll', getFromOption],
 					['Centered Notefield', getFromOption],
 					['Ghost Tapping', getFromOption],
+					['Scroll Speed', getFromOption],
 					['', null],
 					['Text Settings', null],
 					['', null],
@@ -86,15 +87,11 @@ class OptionsMenuState extends MusicBeatState
 					['Judgements', null],
 					['', null],
 					["UI Skin", getFromOption],
-					['Fixed Judgements', getFromOption],
-					['Simply Judgements', getFromOption],
-					['Counter', getFromOption],
 					['', null],
 					['Notes', null],
 					['', null],
 					["Note Skin", getFromOption],
 					["Clip Style", getFromOption],
-					['No Camera Note Movement', getFromOption],
 					['Disable Note Splashes', getFromOption],
 					['Opaque Arrows', getFromOption],
 					['Opaque Holds', getFromOption],
@@ -104,7 +101,6 @@ class OptionsMenuState extends MusicBeatState
 					['Filter', getFromOption],
 					['Disable Antialiasing', getFromOption],
 					["Stage Opacity", getFromOption],
-					['Reduced Movements', getFromOption],
 				]
 			]
 		];
@@ -465,6 +461,8 @@ class OptionsMenuState extends MusicBeatState
 			{
 				case "Framerate Cap":
 					selector.updateSelection(updateBy, 30, 360, 15);
+				case "Scroll Speed":
+					selector.updateSelection(updateBy, 0, 10, 0.05);
 				default:
 					selector.updateSelection(updateBy);
 			}

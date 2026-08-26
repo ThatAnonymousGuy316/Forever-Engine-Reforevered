@@ -35,6 +35,7 @@ import openfl.events.IOErrorEvent;
 import openfl.media.Sound;
 import openfl.net.FileReference;
 import openfl.utils.ByteArray;
+import haxe.io.Path;
 
 using StringTools;
 
@@ -47,6 +48,8 @@ class OriginalChartingState extends MusicBeatState
 	var UI_box:FlxUITabMenu;
 	var curNoteType:Int = 0;
 	var bpmTxt:FlxText;
+
+	private var blockPressWhileScrolling:Array<FlxUIDropDownMenuCustom> = [];
 
 	var strumLine:FlxSprite;
 	var curSong:String = 'Dadbattle';
@@ -242,30 +245,75 @@ class OriginalChartingState extends MusicBeatState
 		stepperBPM.value = Conductor.bpm;
 		stepperBPM.name = 'song_bpm';
 
-		var characters:Array<String> = CoolUtil.coolTextFile(Paths.txt('characterList'));
+		var characters:Array<String> = [];
 
-		var player1DropDown = new FlxUIDropDownMenu(10, 100, FlxUIDropDownMenu.makeStrIdLabelArray(characters, true), function(character:String)
+		var characterPaths = [
+			'assets/${ForeverHScript.scriptsFolder()}/characters',
+			'mod/${ForeverHScript.scriptsFolder()}/characters'
+		];
+
+		function scanCharacters(path:String):Void
+		{
+			if (!sys.FileSystem.exists(path))
+				return;
+
+			var files:Array<String> = sys.FileSystem.readDirectory(path);
+
+			for (file in files)
+			{
+				var fullPath:String = path + '/' + file;
+
+				if (sys.FileSystem.exists(fullPath) && sys.FileSystem.isDirectory(fullPath))
+				{
+					scanCharacters(fullPath);
+				}
+				else
+				{
+					var extension:String = haxe.io.Path.extension(file);
+
+					if (ForeverHScript.globalExtensions().contains(extension))
+					{
+						var name:String = haxe.io.Path.withoutExtension(file);
+
+						if (!characters.contains(name))
+						{
+							characters.push(name);
+						}
+					}
+				}
+			}
+		}
+
+		for (characterPath in characterPaths)
+		{
+			scanCharacters(characterPath);
+		}
+
+		var player1DropDown = new FlxUIDropDownMenuCustom(10, 100, FlxUIDropDownMenuCustom.makeStrIdLabelArray(characters, true), function(character:String)
 		{
 			_song.player1 = characters[Std.parseInt(character)];
 			updateHeads();
 		});
 		player1DropDown.selectedLabel = _song.player1;
+		blockPressWhileScrolling.push(player1DropDown);
 
-		var player2DropDown = new FlxUIDropDownMenu(140, 100, FlxUIDropDownMenu.makeStrIdLabelArray(characters, true), function(character:String)
+		var player2DropDown = new FlxUIDropDownMenuCustom(140, 100, FlxUIDropDownMenuCustom.makeStrIdLabelArray(characters, true), function(character:String)
 		{
 			_song.player2 = characters[Std.parseInt(character)];
 			updateHeads();
 		});
 		player2DropDown.selectedLabel = _song.player2;
+		blockPressWhileScrolling.push(player2DropDown);
 
 		var assetModifiers:Array<String> = CoolUtil.returnAssetsLibrary('UI/default');
 
-		var assetModifierDropDown = new FlxUIDropDownMenu(player2DropDown.x, player2DropDown.y + 40,
-			FlxUIDropDownMenu.makeStrIdLabelArray(assetModifiers, true), function(character:String)
+		var assetModifierDropDown = new FlxUIDropDownMenuCustom(player2DropDown.x, player2DropDown.y + 40,
+			FlxUIDropDownMenuCustom.makeStrIdLabelArray(assetModifiers, true), function(character:String)
 		{
 			_song.assetModifier = assetModifiers[Std.parseInt(character)];
 		});
 		assetModifierDropDown.selectedLabel = _song.assetModifier;
+		blockPressWhileScrolling.push(assetModifierDropDown);
 
 		playTicksBf = new FlxUICheckBox(check_mute_inst.x, check_mute_inst.y + 25, null, null, 'Play Hitsounds (Boyfriend - in editor)', 100);
 		playTicksBf.checked = false;
@@ -286,11 +334,11 @@ class OriginalChartingState extends MusicBeatState
 		tab_group_song.add(loadAutosaveBtn);
 		tab_group_song.add(stepperBPM);
 		tab_group_song.add(stepperSpeed);
-		tab_group_song.add(player1DropDown);
-		tab_group_song.add(player2DropDown);
 		tab_group_song.add(playTicksBf);
 		tab_group_song.add(playTicksDad);
 		tab_group_song.add(assetModifierDropDown);
+		tab_group_song.add(player1DropDown);
+		tab_group_song.add(player2DropDown);
 
 		UI_box.addGroup(tab_group_song);
 		UI_box.scrollFactor.set();
@@ -559,6 +607,17 @@ class OriginalChartingState extends MusicBeatState
 			}
 		});
 
+		var blockInput:Bool = false;
+		if (!blockInput)
+		{
+			for (dropDownMenu in blockPressWhileScrolling) {
+				if(dropDownMenu.dropPanel.visible) {
+					blockInput = true;
+					break;
+				}
+			}
+		}
+
 		strumLine.y = getYfromStrum((Conductor.songPosition - sectionStartTime()) % (Conductor.stepCrochet * _song.notes[curBar].lengthInSteps));
 
 		if (curBeat % 4 == 0 && curStep >= 16 * (curBar + 1))
@@ -579,171 +638,174 @@ class OriginalChartingState extends MusicBeatState
 		FlxG.watch.addQuick('daStep', curStep);
 
 		if (FlxG.mouse.justPressed)
-		{
-			if (FlxG.mouse.overlaps(curRenderedNotes))
-			{
-				curRenderedNotes.forEach(function(note:Note)
 				{
-					if (FlxG.mouse.overlaps(note))
+					if (FlxG.mouse.overlaps(curRenderedNotes))
 					{
-						if (FlxG.keys.pressed.CONTROL)
+						curRenderedNotes.forEach(function(note:Note)
 						{
-							selectNote(note);
-						}
-						else
+							if (FlxG.mouse.overlaps(note))
+							{
+								if (FlxG.keys.pressed.CONTROL)
+								{
+									selectNote(note);
+								}
+								else
+								{
+									trace('tryin to delete note...');
+									deleteNote(note);
+								}
+							}
+						});
+					}
+					else
+					{
+						if (FlxG.mouse.x > gridBG.x
+							&& FlxG.mouse.x < gridBG.x + gridBG.width
+							&& FlxG.mouse.y > gridBG.y
+							&& FlxG.mouse.y < gridBG.y + (GRID_SIZE * _song.notes[curBar].lengthInSteps))
 						{
-							trace('tryin to delete note...');
-							deleteNote(note);
+							FlxG.log.add('added note');
+							addNote();
 						}
 					}
-				});
-			}
-			else
-			{
+				}
+
 				if (FlxG.mouse.x > gridBG.x
 					&& FlxG.mouse.x < gridBG.x + gridBG.width
 					&& FlxG.mouse.y > gridBG.y
 					&& FlxG.mouse.y < gridBG.y + (GRID_SIZE * _song.notes[curBar].lengthInSteps))
 				{
-					FlxG.log.add('added note');
-					addNote();
+					dummyArrow.x = Math.floor(FlxG.mouse.x / GRID_SIZE) * GRID_SIZE;
+					if (FlxG.keys.pressed.SHIFT)
+						dummyArrow.y = FlxG.mouse.y;
+					else
+						dummyArrow.y = Math.floor(FlxG.mouse.y / GRID_SIZE) * GRID_SIZE;
 				}
-			}
-		}
 
-		if (FlxG.mouse.x > gridBG.x
-			&& FlxG.mouse.x < gridBG.x + gridBG.width
-			&& FlxG.mouse.y > gridBG.y
-			&& FlxG.mouse.y < gridBG.y + (GRID_SIZE * _song.notes[curBar].lengthInSteps))
+		if (!blockInput)
 		{
-			dummyArrow.x = Math.floor(FlxG.mouse.x / GRID_SIZE) * GRID_SIZE;
-			if (FlxG.keys.pressed.SHIFT)
-				dummyArrow.y = FlxG.mouse.y;
-			else
-				dummyArrow.y = Math.floor(FlxG.mouse.y / GRID_SIZE) * GRID_SIZE;
-		}
-
-		if (FlxG.keys.justPressed.ENTER)
-		{
-			lastBar = curBar;
-			PlayState.SONG = _song;
-			songMusic.stop();
-			vocals.stop();
-			Main.switchState(new PlayState());
-		}
-
-		if (FlxG.keys.justPressed.E)
-		{
-			changeNoteSustain(Conductor.stepCrochet);
-		}
-		if (FlxG.keys.justPressed.Q)
-		{
-			changeNoteSustain(-Conductor.stepCrochet);
-		}
-
-		if (FlxG.keys.justPressed.TAB)
-		{
-			if (FlxG.keys.pressed.SHIFT)
-			{
-				UI_box.selected_tab -= 1;
-				if (UI_box.selected_tab < 0)
-					UI_box.selected_tab = 2;
-			}
-			else
-			{
-				UI_box.selected_tab += 1;
-				if (UI_box.selected_tab >= 3)
-					UI_box.selected_tab = 0;
-			}
-		}
-
-		if (!typingShit.hasFocus)
-		{
-			if (FlxG.keys.justPressed.SPACE)
-			{
-				if (songMusic.playing)
+				if (FlxG.keys.justPressed.ENTER)
 				{
-					songMusic.pause();
-					vocals.pause();
+					lastBar = curBar;
+					PlayState.SONG = _song;
+					songMusic.stop();
+					vocals.stop();
+					Main.switchState(new PlayState());
 				}
-				else
-				{
-					vocals.play();
-					songMusic.play();
-				}
-			}
 
-			if (FlxG.keys.justPressed.R)
-			{
+				if (FlxG.keys.justPressed.E)
+				{
+					changeNoteSustain(Conductor.stepCrochet);
+				}
+				if (FlxG.keys.justPressed.Q)
+				{
+					changeNoteSustain(-Conductor.stepCrochet);
+				}
+
+				if (FlxG.keys.justPressed.TAB)
+				{
+					if (FlxG.keys.pressed.SHIFT)
+					{
+						UI_box.selected_tab -= 1;
+						if (UI_box.selected_tab < 0)
+							UI_box.selected_tab = 2;
+					}
+					else
+					{
+						UI_box.selected_tab += 1;
+						if (UI_box.selected_tab >= 3)
+							UI_box.selected_tab = 0;
+					}
+				}
+
+				if (!typingShit.hasFocus)
+				{
+					if (FlxG.keys.justPressed.SPACE)
+					{
+						if (songMusic.playing)
+						{
+							songMusic.pause();
+							vocals.pause();
+						}
+						else
+						{
+							vocals.play();
+							songMusic.play();
+						}
+					}
+
+					if (FlxG.keys.justPressed.R)
+					{
+						if (FlxG.keys.pressed.SHIFT)
+							resetSection(true);
+						else
+							resetSection();
+					}
+
+					if (FlxG.mouse.wheel != 0)
+					{
+						songMusic.pause();
+						vocals.pause();
+
+						songMusic.time -= (FlxG.mouse.wheel * Conductor.stepCrochet * 0.4);
+						vocals.time = songMusic.time;
+					}
+
+					if (!FlxG.keys.pressed.SHIFT)
+					{
+						if (FlxG.keys.pressed.W || FlxG.keys.pressed.S)
+						{
+							songMusic.pause();
+							vocals.pause();
+
+							var daTime:Float = 700 * FlxG.elapsed;
+
+							if (FlxG.keys.pressed.W)
+							{
+								songMusic.time -= daTime;
+							}
+							else
+								songMusic.time += daTime;
+
+							vocals.time = songMusic.time;
+						}
+					}
+					else
+					{
+						if (FlxG.keys.justPressed.W || FlxG.keys.justPressed.S)
+						{
+							songMusic.pause();
+							vocals.pause();
+
+							var daTime:Float = Conductor.stepCrochet * 2;
+
+							if (FlxG.keys.justPressed.W)
+							{
+								songMusic.time -= daTime;
+							}
+							else
+								songMusic.time += daTime;
+
+							vocals.time = songMusic.time;
+						}
+					}
+				}
+
+				_song.bpm = tempBpm;
+
+				/* if (FlxG.keys.justPressed.UP)
+						Conductor.changeBPM(Conductor.bpm + 1);
+					if (FlxG.keys.justPressed.DOWN)
+						Conductor.changeBPM(Conductor.bpm - 1); */
+
+				var shiftThing:Int = 1;
 				if (FlxG.keys.pressed.SHIFT)
-					resetSection(true);
-				else
-					resetSection();
-			}
-
-			if (FlxG.mouse.wheel != 0)
-			{
-				songMusic.pause();
-				vocals.pause();
-
-				songMusic.time -= (FlxG.mouse.wheel * Conductor.stepCrochet * 0.4);
-				vocals.time = songMusic.time;
-			}
-
-			if (!FlxG.keys.pressed.SHIFT)
-			{
-				if (FlxG.keys.pressed.W || FlxG.keys.pressed.S)
-				{
-					songMusic.pause();
-					vocals.pause();
-
-					var daTime:Float = 700 * FlxG.elapsed;
-
-					if (FlxG.keys.pressed.W)
-					{
-						songMusic.time -= daTime;
-					}
-					else
-						songMusic.time += daTime;
-
-					vocals.time = songMusic.time;
-				}
-			}
-			else
-			{
-				if (FlxG.keys.justPressed.W || FlxG.keys.justPressed.S)
-				{
-					songMusic.pause();
-					vocals.pause();
-
-					var daTime:Float = Conductor.stepCrochet * 2;
-
-					if (FlxG.keys.justPressed.W)
-					{
-						songMusic.time -= daTime;
-					}
-					else
-						songMusic.time += daTime;
-
-					vocals.time = songMusic.time;
-				}
-			}
+					shiftThing = 4;
+				if (FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.D)
+					changeSection(curBar + shiftThing);
+				if (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.A)
+					changeSection(curBar - shiftThing);
 		}
-
-		_song.bpm = tempBpm;
-
-		/* if (FlxG.keys.justPressed.UP)
-				Conductor.changeBPM(Conductor.bpm + 1);
-			if (FlxG.keys.justPressed.DOWN)
-				Conductor.changeBPM(Conductor.bpm - 1); */
-
-		var shiftThing:Int = 1;
-		if (FlxG.keys.pressed.SHIFT)
-			shiftThing = 4;
-		if (FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.D)
-			changeSection(curBar + shiftThing);
-		if (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.A)
-			changeSection(curBar - shiftThing);
 
 		bpmTxt.text = bpmTxt.text = Std.string(FlxMath.roundDecimal(Conductor.songPosition * 0.001, 2))
 			+ " / "

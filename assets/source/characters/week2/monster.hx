@@ -1,0 +1,11 @@
+function character()
+{
+    sparrowAtlas('Monster_Assets');
+	addByPrefix('idle', 'monster idle', 24, false);
+	addByPrefix('singUP', 'monster up note', 24, false);
+	addByPrefix('singDOWN', 'monster down', 24, false);
+	addByPrefix('singLEFT', 'Monster Right note', 24, false);
+	addByPrefix('singRIGHT', 'Monster left note', 24, false);
+
+	playAnim('idle');
+}

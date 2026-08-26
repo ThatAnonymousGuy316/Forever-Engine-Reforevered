@@ -18,8 +18,10 @@ class BackgroundDancer extends FNFSprite
 
 	var danceDir:Bool = false;
 
-	public function dance():Void
+	public override function dance(?forced:Bool = false):Void
 	{
+		super.dance(forced);
+
 		danceDir = !danceDir;
 
 		if (danceDir)

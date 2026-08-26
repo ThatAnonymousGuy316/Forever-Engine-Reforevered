@@ -23,10 +23,9 @@ using StringTools;
 class MainMenuState extends MusicBeatState
 {
 	var menuItems:FlxTypedGroup<FlxSprite>;
-	var curSelected:Float = 0;
+	public static var curSelected:Float = 0;
 
 	var bg:FlxSprite; // the background has been separated for more control
-	var magenta:FlxSprite;
 	var camFollow:FlxObject;
 
 	var optionShit:Array<String> = ['story mode', 'freeplay', 'options'];
@@ -61,17 +60,6 @@ class MainMenuState extends MusicBeatState
 		bg.screenCenter();
 		bg.antialiasing = true;
 		add(bg);
-
-		magenta = new FlxSprite(-85).loadGraphic(Paths.image('menus/base/menuDesat'));
-		magenta.scrollFactor.x = 0;
-		magenta.scrollFactor.y = 0.18;
-		magenta.setGraphicSize(Std.int(magenta.width * 1.1));
-		magenta.updateHitbox();
-		magenta.screenCenter();
-		magenta.visible = false;
-		magenta.antialiasing = true;
-		magenta.color = 0xFFfd719b;
-		add(magenta);
 
 		// add the camera
 		camFollow = new FlxObject(0, 0, 1, 1);
@@ -130,7 +118,7 @@ class MainMenuState extends MusicBeatState
 
 		// from the base game lol
 
-		var versionShit:FlxText = new FlxText(5, FlxG.height - 18, 0, "Forever Engine Legacy v" + Main.gameVersion, 12);
+		var versionShit:FlxText = new FlxText(5, FlxG.height - 18, 0, "Forever Engine Reforevered v" + Main.gameVersion, 12);
 		versionShit.scrollFactor.set();
 		versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(versionShit);
@@ -217,9 +205,6 @@ class MainMenuState extends MusicBeatState
 			//
 			selectedSomethin = true;
 			FlxG.sound.play(Paths.sound('confirmMenu'));
-
-			FlxFlicker.flicker(magenta, 0.8, 0.1, false);
-
 			menuItems.forEach(function(spr:FlxSprite)
 			{
 				if (curSelected != spr.ID)

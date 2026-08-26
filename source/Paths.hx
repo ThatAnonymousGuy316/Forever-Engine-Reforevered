@@ -228,9 +228,11 @@ class Paths
 		return '$library/$file';
 	}
 
-	inline static function getPreloadPath(file:String)
+	public inline static function getPreloadPath(file:String)
 	{
 		var returnPath:String = 'assets/$file';
+		if (sys.FileSystem.exists('mod/$file'))
+			returnPath = 'mod/$file';
 		if (!FileSystem.exists(returnPath))
 			returnPath = CoolUtil.swapSpaceDash(returnPath);
 		return returnPath;
@@ -253,7 +255,7 @@ class Paths
 
 	inline static public function offsetTxt(key:String, ?library:String)
 	{
-		return getPath('images/characters/$key.txt', TEXT, library);
+		return getPath('${ForeverHScript.scriptsFolder()}/characters/_offsets/$key.txt', TEXT, library);
 	}
 
 	inline static public function json(key:String, ?library:String)

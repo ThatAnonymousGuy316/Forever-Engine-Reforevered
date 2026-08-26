@@ -19,6 +19,8 @@ import meta.data.Conductor;
 import meta.data.dependency.FNFSprite;
 import meta.state.PlayState;
 
+import flixel.math.FlxAngle;
+
 using StringTools;
 
 /**
@@ -46,13 +48,19 @@ class Stage extends FlxTypedGroup<FlxBasic>
 	var bottomBoppers:FNFSprite;
 	var santa:FNFSprite;
 
+	public var tankmanRun:FlxTypedGroup<TankmenBG>;
+	var tankWatchtower:BGSprite;
+	var tankGround:BGSprite;
+
 	var bgGirls:BackgroundGirls;
 
 	public var curStage:String;
 
 	var daPixelZoom = PlayState.daPixelZoom;
 
-	public var foreground:FlxTypedGroup<FlxBasic>;
+	public var foreground:FlxTypedGroup<FNFSprite>;
+
+	public var stageHScripts:Array<ForeverHScript> = [];
 
 	public function new(curStage)
 	{
@@ -80,19 +88,125 @@ class Stage extends FlxTypedGroup<FlxBasic>
 					curStage = 'school';
 				case 'thorns':
 					curStage = 'schoolEvil';
-				default:
+				case 'bopeebo' | 'fresh' | 'dadbattle' | 'tutorial' | 'test':
 					curStage = 'stage';
+				case 'ugh' | 'guns' | 'stress':
+					curStage = 'tank';
+				default:
+					curStage = CoolUtil.spaceToDash(PlayState.SONG.song.toLowerCase());
 			}
 
 			PlayState.curStage = curStage;
 		}
 
 		// to apply to foreground use foreground.add(); instead of add();
-		foreground = new FlxTypedGroup<FlxBasic>();
+		foreground = new FlxTypedGroup<FNFSprite>();
 
 		//
 		switch (curStage)
 		{
+			default:
+				curStage = CoolUtil.spaceToDash(PlayState.SONG.song.toLowerCase());
+				function initScript(ext:String)
+				{
+					var stageScript:ForeverHScript = new ForeverHScript(Paths.getPreloadPath('${ForeverHScript.scriptsFolder()}/stages/${curStage.toLowerCase()}.${ext}'));
+					stageScript.set(['add', 'addSprite'], this.add);
+					stageScript.set(['foreground'], this.foreground);
+					stageScript.set(['cameraZoom'], function(a:Float = 1.05){
+						cameraZoom = a;
+					});
+					stageScript.set(['cameraSpeed'], function(a:Float = 1.0){
+						cameraSpeed = a;
+					});
+					stageScript.set(['daPixelZoom'], function(a:Float = 6){
+						daPixelZoom = a;
+					});
+					stageScript.set(['addHaxeSpriteForeground'], function(name:String) {
+						var sprite = meta.state.PlayState.current.modchartSprites.get(name);
+
+						if (sprite != null) {
+							foreground.add(sprite);
+						}
+					});
+					stageScript.call(['stageCreate', 'onCreate', 'create'], []);
+					stageHScripts.push(stageScript);
+				}
+				for (ext in ForeverHScript.globalExtensions())
+				{
+					initScript(ext);
+				}		
+			case 'tank':
+				cameraZoom = 0.90;
+				curStage = 'tank';
+
+				var bg:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankSky', -400, -400, 0, 0);
+				add(bg);
+
+				var tankSky:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankClouds', FlxG.random.int(-700, -100), FlxG.random.int(-20, 20), 0.1, 0.1);
+				tankSky.active = true;
+				tankSky.velocity.x = FlxG.random.float(5, 15);
+				add(tankSky);
+
+				var tankMountains:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankMountains', -300, -20, 0.2, 0.2);
+				tankMountains.setGraphicSize(Std.int(tankMountains.width * 1.2));
+				tankMountains.updateHitbox();
+				add(tankMountains);
+
+				var tankBuildings:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankBuildings', -200, 0, 0.30, 0.30);
+				tankBuildings.setGraphicSize(Std.int(tankBuildings.width * 1.1));
+				tankBuildings.updateHitbox();
+				add(tankBuildings);
+
+				var tankRuins:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankRuins', -200, 0, 0.35, 0.35);
+				tankRuins.setGraphicSize(Std.int(tankRuins.width * 1.1));
+				tankRuins.updateHitbox();
+				add(tankRuins);
+
+				var smokeLeft:BGSprite = new BGSprite('backgrounds/' + curStage + '/smokeLeft', -200, -100, 0.4, 0.4, ['SmokeBlurLeft'], true);
+				add(smokeLeft);
+
+				var smokeRight:BGSprite = new BGSprite('backgrounds/' + curStage + '/smokeRight', 1100, -100, 0.4, 0.4, ['SmokeRight'], true);
+				add(smokeRight);
+
+				// tankGround.
+
+				tankWatchtower = new BGSprite('backgrounds/' + curStage + '/tankWatchtower', 100, 50, 0.5, 0.5, ['watchtower gradient color']);
+				add(tankWatchtower);
+
+				tankGround = new BGSprite('backgrounds/' + curStage + '/tankRolling', 300, 300, 0.5, 0.5, ['BG tank w lighting'], true);
+				add(tankGround);
+				// tankGround.active = false;
+
+				tankmanRun = new FlxTypedGroup<TankmenBG>();
+				add(tankmanRun);
+
+				var tankGround:BGSprite = new BGSprite('backgrounds/' + curStage + '/tankGround', -420, -150);
+				tankGround.setGraphicSize(Std.int(tankGround.width * 1.15));
+				tankGround.updateHitbox();
+				add(tankGround);
+
+				moveTank();
+
+				// smokeLeft.screenCenter();
+
+				var fgTank0:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank0', -500, 650, 1.7, 1.5, ['fg']);
+				foreground.add(fgTank0);
+
+				var fgTank1:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank1', -300, 750, 2, 0.2, ['fg']);
+				foreground.add(fgTank1);
+
+				// just called 'foreground' just cuz small inconsistency no bbiggei
+				var fgTank2:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank2', 450, 940, 1.5, 1.5, ['foreground']);
+				foreground.add(fgTank2);
+
+				var fgTank4:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank4', 1300, 900, 1.5, 1.5, ['fg']);
+				foreground.add(fgTank4);
+
+				var fgTank5:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank5', 1620, 700, 1.5, 1.5, ['fg']);
+				foreground.add(fgTank5);
+
+				var fgTank3:BGSprite = new BGSprite('backgrounds/' + curStage + '/tank3', 1300, 1200, 3.5, 2.5, ['fg']);
+				foreground.add(fgTank3);
 			case 'spooky':
 				curStage = 'spooky';
 				// halloweenLevel = true;
@@ -338,7 +452,7 @@ class Stage extends FlxTypedGroup<FlxBasic>
 				bg.scale.set(6, 6);
 				add(bg);
 
-			default:
+			case 'stage':
 				cameraZoom = 0.9;
 				curStage = 'stage';
 				var bg:FNFSprite = new FNFSprite(-600, -200).loadGraphic(Paths.image('backgrounds/' + curStage + '/stageback'));
@@ -371,6 +485,16 @@ class Stage extends FlxTypedGroup<FlxBasic>
 		}
 	}
 
+	override public function destroy()
+	{
+		for (script in stageHScripts)
+		{
+			script.onDestroy();
+		}
+		stageHScripts = [];
+		super.destroy();
+	}
+
 	// return the girlfriend's type
 	public function returnGFtype(curStage)
 	{
@@ -386,7 +510,20 @@ class Stage extends FlxTypedGroup<FlxBasic>
 				gfVersion = 'gf-pixel';
 			case 'schoolEvil':
 				gfVersion = 'gf-pixel';
+			case 'tank':
+				gfVersion = 'gf-tankmen';
+			default:
+				for (script in stageHScripts)
+				{
+					script.set(['gfVersion'], function(version:String = 'gf'){
+						gfVersion = version;
+					});
+					script.call(['onGf', 'gf', 'girlfriend'], []);
+				}
 		}
+
+		if (PlayState.SONG.song.toLowerCase() == 'stress')
+			gfVersion = 'pico-speaker';
 
 		return gfVersion;
 	}
@@ -399,6 +536,11 @@ class Stage extends FlxTypedGroup<FlxBasic>
 		{
 			switch (char.curCharacter)
 			{
+				default:
+					for (script in stageHScripts)
+					{
+						script.call(['dadPosition'], [curStage, boyfriend, dad, gf]);
+					}
 				case 'gf':
 					char.setPosition(gf.x, gf.y);
 					gf.visible = false;
@@ -423,6 +565,24 @@ class Stage extends FlxTypedGroup<FlxBasic>
 		// REPOSITIONING PER STAGE
 		switch (curStage)
 		{
+			default:
+				for (script in stageHScripts)
+				{
+					script.call(['repositionPlayers'], [curStage, boyfriend, dad, gf]);
+				}
+			case "tank":
+				gf.y += 10;
+				gf.x -= 30;
+				boyfriend.x += 40;
+				boyfriend.y += 0;
+				dad.y += 60;
+				dad.x -= 80;
+
+				if (gf.curCharacter != 'pico-speaker')
+				{
+					gf.x -= 170;
+					gf.y -= 75;
+				}
 			case 'highway':
 				boyfriend.y -= 220;
 				boyfriend.x += 260;
@@ -460,11 +620,27 @@ class Stage extends FlxTypedGroup<FlxBasic>
 	var trainCooldown:Int = 0;
 	var startedMoving:Bool = false;
 
+	var tankResetShit:Bool = false;
+	var tankMoving:Bool = false;
+	var tankAngle:Float = FlxG.random.int(-90, 45);
+	var tankSpeed:Float = FlxG.random.float(5, 7);
+	var tankX:Float = 400;
+
 	public function stageUpdate(curBeat:Int, boyfriend:Boyfriend, gf:Character, dadOpponent:Character)
 	{
 		// trace('update backgrounds');
+		for (script in stageHScripts)
+		{
+			script.call(['stageUpdate', 'onBeatHit', 'beatHit'], [curBeat, boyfriend, gf, dadOpponent]);
+		}
 		switch (PlayState.curStage)
 		{
+			case 'tank':
+				tankWatchtower.dance();
+				foreground.forEach(function(spr:FNFSprite)
+				{
+					spr.dance();
+				});
 			case 'highway':
 				// trace('highway update');
 				grpLimoDancers.forEach(function(dancer:BackgroundDancer)
@@ -518,6 +694,10 @@ class Stage extends FlxTypedGroup<FlxBasic>
 
 	public function stageUpdateConstant(elapsed:Float, boyfriend:Boyfriend, gf:Character, dadOpponent:Character)
 	{
+		for (script in stageHScripts)
+		{
+			script.call(['stageUpdateConstant', 'onUpdate', 'update'], [elapsed, boyfriend, gf, dadOpponent]);
+		}
 		switch (PlayState.curStage)
 		{
 			case 'philly':
@@ -531,6 +711,20 @@ class Stage extends FlxTypedGroup<FlxBasic>
 						trainFrameTiming = 0;
 					}
 				}
+			case 'tank':
+				moveTank();
+		}
+	}
+
+	function moveTank():Void
+	{
+		{
+			var daAngleOffset:Float = 1;
+			tankAngle += FlxG.elapsed * tankSpeed;
+			tankGround.angle = tankAngle - 90 + 15;
+
+			tankGround.x = tankX + Math.cos(FlxAngle.asRadians((tankAngle * daAngleOffset) + 180)) * 1500;
+			tankGround.y = 1300 + Math.sin(FlxAngle.asRadians((tankAngle * daAngleOffset) + 180)) * 1100;
 		}
 	}
 
