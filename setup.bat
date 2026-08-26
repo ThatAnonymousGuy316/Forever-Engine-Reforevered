@@ -1,41 +1,79 @@
 @echo off
-title Forever Engine Setup - Start
-echo Welcome to the Forever Engine Automatic Setup!
-TIMEOUT 3 >nul
+title Engine Setup
 
-echo This will automatically install all of the needed libraries and dependencies for compiling.
-echo This setup also expects that you already have Haxe, the open-source toolkit, installed and ready to use
-echo And also expects you to have Git installed
+echo ==============================
+echo        Engine Setup
+echo ==============================
+echo.
 
-echo So if you don't have those, feel free to go to the following wepages to install the software.
-echo Haxe: https://haxe.org/download/
-echo Git: https://git-scm.com/downloads/
+:: ==========================================
+:: Core HaxeFlixel Dependencies
+:: ==========================================
 
-TIMEOUT 4 >nul
-pause
-cls
+echo [1/4] Installing core dependencies...
+echo.
 
-title Forever Engine Setup - Installing HaxeFlixel
-echo It is time to install the engine that Funkin' uses - HaxeFlixel.
-haxelib newrepo
 haxelib install lime
 haxelib install openfl
 haxelib install flixel
-haxelib run lime setup flixel
-haxelib run lime setup
-haxelib install flixel-tools
-haxelib run flixel-tools Setup
-
-title Forever Engine Setup - Installing Additional Libraries
-haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
+haxelib install flixel-addons
+haxelib install flixel-ui
+haxelib install hxcpp
+haxelib install hscript
 haxelib install hxcpp-debug-server
-cls
 
-title Forever Engine Setup - The End!
-echo And this is where the setup comes to an end
-TIMEOUT 2 >nul
-echo In case you're getting an error when compiling complaining about MSVC
-echo You should be able to run `setup-msvc.bat` in the same folder were this setup file is.
-TIMEOUT 2 >nul
-echo That's all!
+echo.
+echo Core dependencies installed!
+echo.
+
+:: ==========================================
+:: HaxeUI
+:: ==========================================
+
+echo [2/4] Installing HaxeUI...
+echo.
+
+haxelib install haxeui-core
+haxelib install haxeui-flixel
+
+echo.
+echo HaxeUI installed!
+echo.
+
+:: ==========================================
+:: Video / Media
+:: ==========================================
+
+echo [3/4] Installing media dependencies...
+echo.
+
+haxelib install hxvlc
+
+echo.
+echo Media dependencies installed!
+echo.
+
+:: ==========================================
+:: Git Dependencies
+:: ==========================================
+
+echo [4/4] Installing Git dependencies...
+echo.
+
+haxelib git hscript-iris https://github.com/crowplexus/hscript-iris/
+haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc master
+
+echo.
+echo Git dependencies installed!
+echo.
+
+:: ==========================================
+:: Finished
+:: ==========================================
+
+echo ==============================
+echo       Setup Complete!
+echo ==============================
+echo.
+
 pause
